@@ -13,10 +13,6 @@ func run() error {
 
 	r := chi.NewRouter()
 
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hi!\n"))
-	})
-
 	r.Post("/", handle(shortener.shorten))
 	r.Get("/{slug}", handle(shortener.redirect))
 
