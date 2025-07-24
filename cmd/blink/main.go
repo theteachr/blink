@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 
@@ -17,23 +16,6 @@ func run() error {
 	r.Get("/{slug}", handle(shortener.redirect))
 
 	return http.ListenAndServe(":8080", r)
-}
-
-func handle(h func(w http.ResponseWriter, r *http.Request) (int, error)) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if code, err := h(w, r); err != nil {
-			payload := struct {
-				Error string `json:"error"`
-			}{}
-			payload.Error = err.Error()
-
-			w.WriteHeader(code)
-
-			if err := json.NewEncoder(w).Encode(payload); err != nil {
-				log.Println("failed to write error response")
-			}
-		}
-	}
 }
 
 func main() {
