@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -8,14 +9,21 @@ import (
 )
 
 func run() error {
-	shortener := newShortener()
+	// TODO: Read the following values (config file, command line, ...)
+	port := 8080
+	base := fmt.Sprint("http://127.0.0.1:", port)
+
+	shortener, err := newShortener(base)
+	if err != nil {
+		return err
+	}
 
 	r := chi.NewRouter()
 
 	r.Post("/", handle(shortener.shorten))
 	r.Get("/{slug}", handle(shortener.redirect))
 
-	return http.ListenAndServe(":8080", r)
+	return http.ListenAndServe(fmt.Sprint(":", port), r)
 }
 
 func main() {

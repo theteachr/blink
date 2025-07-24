@@ -4,6 +4,7 @@ import (
 	"blink/internal/blink"
 	"blink/internal/demo"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -13,10 +14,18 @@ import (
 
 type shortener struct {
 	blink.Shortener
+	base *url.URL
 }
 
-func newShortener() *shortener {
-	return &shortener{demo.Shortener{}}
+func newShortener(base string) (*shortener, error) {
+	base_, err := url.Parse(base)
+	if err != nil {
+		return nil, fmt.Errorf("invalid url: %w", err)
+	}
+	return &shortener{
+		demo.Shortener{},
+		base_,
+	}, nil
 }
 
 func (s *shortener) redirect(w http.ResponseWriter, r *http.Request) (int, error) {
@@ -53,17 +62,10 @@ func (s *shortener) shorten(w http.ResponseWriter, r *http.Request) (int, error)
 		return http.StatusInternalServerError, err
 	}
 
-	// FIXME
-	su := url.URL{
-		Scheme: "http",
-		Host:   "localhost:8080",
-		Path:   slug,
-	}
-
 	body := struct {
 		Url string `json:"url"`
 	}{}
-	body.Url = su.String()
+	body.Url = s.base.JoinPath(slug).String()
 
 	if err := json.NewEncoder(w).Encode(body); err != nil {
 		return http.StatusInternalServerError, err
